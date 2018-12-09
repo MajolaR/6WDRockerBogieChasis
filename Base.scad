@@ -96,9 +96,8 @@ hingeThickness = slabThickness;
 //DrawRoundedStandoff(height = 11);
 
 // TODO: Increase height to 11.?
-module DrawRoundedStandoff(height = 7.2)
+module DrawRoundedStandoff(height = 7.2, standoffInnerRadius =  1.52)
 {
-    standoffInnerRadius = 1.52;
     standoffOuterRadius = 2.85;
 
     difference()
@@ -332,7 +331,25 @@ module DrawMicroServo(servoWidth = 12.7, servoLength = 23, mountHoleRadius = 1, 
     }
 }
 
-module drawBodyLid(xDiff = 82, yDiff = bodyInnerWidth, offsetXY = 0.5, height = slabThickness, drawArduino = false, drawWireHole = true, drawWireHoleXRelPercPosition = 50, drawBatteryHolder = false, drawHinge = false, drawServo = false)
+module drawL298N(centerX = 0, centerY = 0, screwRadius = 1.7)
+{
+    lengthXY = 37;
+
+    localCenterX = centerX == 0 ? lengthXY : centerX;
+    localCenterY = centerY == 0 ? lengthXY : centerY;
+
+    translate([localCenterX - lengthXY, localCenterY - lengthXY, 0] / 2)
+    for(x = [0:1])
+    {
+        for(y = [0:1])
+        {
+            translate([x * lengthXY, y * lengthXY, 0])
+                cylinder(r = screwRadius, h = slabHeight);
+        }
+    }
+}
+
+module drawBodyLid(xDiff = 82, yDiff = bodyInnerWidth, offsetXY = 0.5, height = slabThickness, drawArduino = false, drawWireHole = true, drawWireHoleXRelPercPosition = 50, drawBatteryHolder = false, drawHinge = false, drawServo = false, drawL298N = false)
 {
     difference()
     {
@@ -360,6 +377,14 @@ module drawBodyLid(xDiff = 82, yDiff = bodyInnerWidth, offsetXY = 0.5, height = 
             // Spacers
             translate([spacerDistance + x * (xDiff - offsetXY - 2 * spacerDistance), spacerDistance + y * (yDiff - offsetXY - 2 * spacerDistance), 0])
                 cylinder(r = 1.5, h = slabThickness);
+        }
+
+        if(drawL298N)
+        {
+            centerX = xDiff - offsetXY;
+            centerY = yDiff - offsetXY;
+
+            drawL298N(centerX = centerX, centerY = centerY);
         }
 
         if(drawServo)
@@ -425,7 +450,7 @@ module batteryholder(battrHolderHeight = battrHolderHeight, battrHolderHalfwidth
     }
 }
 
-module drawHollow(matrix = [[0,0],[innerWidthAdj, innerWidthAdj], [innerWidthAdj, rearWheelTopLength + innerWidthAdj], [0, rearWheelTopLength + innerWidthAdj]], motorMount = true, centerMount = false, centerMountWidth = 12, hollowWidth = slabThickness + motorHeight / 2, drawWireSpace = true, isHollow = true, drawBodyMounts = false, drawBackMount = false, cutTop = false, drawArduino = false, drawLidHoles = false, drawWireHole = false, cutHole = true)
+module drawHollow(matrix = [[0,0],[innerWidthAdj, innerWidthAdj], [innerWidthAdj, rearWheelTopLength + innerWidthAdj], [0, rearWheelTopLength + innerWidthAdj]], motorMount = true, centerMount = false, centerMountWidth = 12, hollowWidth = slabThickness + motorHeight / 2, drawWireSpace = true, isHollow = true, drawBodyMounts = false, drawBackMount = false, cutTop = false, drawArduino = false, drawLidHoles = false, drawWireHole = false, cutHole = true, drawL298N = false)
 {
     
     // Set variables
@@ -503,13 +528,7 @@ module drawHollow(matrix = [[0,0],[innerWidthAdj, innerWidthAdj], [innerWidthAdj
                     translate([0, 0, slabThickness * 3 / 2 + innerHollowWidth])
                         cylinder(r = bodyMountScrewHeadDiameter / 2, h = slabThickness / 2);
                 }
-            }
-        }
-        
-        if (drawLidHoles)
-        {
-            for(l = [0:1])
-            {
+
                 translate([x1 + lidScrewOffset + l*(xDiff - 2 * lidScrewOffset), -(innerCornerRadius + slabThickness / 2), 0])
                 {
                     cylinder(r = bodyMountScrewHeadDiameter / 2, h = slabThickness / 2);
@@ -520,7 +539,7 @@ module drawHollow(matrix = [[0,0],[innerWidthAdj, innerWidthAdj], [innerWidthAdj
                 }
             }
         }
-
+        
         //Draw back Mount
         if (drawBackMount)
         {
