@@ -29,7 +29,7 @@ jointHeight = (totalHypotenus) * sin(45) - roundedCornerCompromise + .39 - 26;
 
 // Hinges
 hingeHeight = 38.5;
-comfortGap = 1.2;
+comfortGap = 0.2;
 bearingXposition = 22.2;
 innerWidthAdj = innerWidth - 1.5*slabThickness;
 
@@ -94,6 +94,73 @@ hingeThickness = slabThickness;
 //DrawBodyConnector();
 
 //DrawRoundedStandoff(height = 11);
+
+//DrawShaftConnector();
+connectorDiameter = 3.2; // 3mm screw should fit around it
+connectorDiameterOuterDelta = 3;
+connectorHingeThickness = 2.2;
+
+connectorDiameterOuter = connectorDiameter + connectorDiameterOuterDelta;
+clampHalfWidth = (connectorDiameter + connectorDiameterOuterDelta + connectorHingeThickness) / 2;
+
+module DrawShaftConnector(squareLength = 6.2, connectorDiameter = connectorDiameter)
+{
+    difference()
+    {
+        translate([0,0,0])
+        {
+            linear_extrude(height = connectorDiameter)
+                circle(r = squareLength / 2, center = true);
+
+            squareSide = connectorDiameter * cos(45);
+            linear_extrude(height = squareSide)
+                square([squareLength + 2 * squareSide, squareSide], center = true);
+        }
+        cylinder(r = connectorDiameter / 2, h = connectorDiameter);
+    }
+}
+
+clampHeight = 16;
+module DrawShaftClamps(squareLength = 6.2, connectorDiameter = connectorDiameter)
+{
+    // from the outer radius of the connectorDiameter (squareLength / 2 + )
+    // add a small factor to get the total free rolling radius (default = .3 + .3)
+    // add the factor for the hinge (2.2)
+
+    innerCurveRadius = squareLength / 2 * 105 / 100;
+    squareSide = connectorDiameter * cos(45);
+    // clampHalfWidth = (squareLength + squareSide) / 2;
+    // clampHalfWidth = connectorDiameter +    
+    boltHolderHeigh = clampHalfWidth - innerCurveRadius;
+    gimpalShaftWidth = connectorDiameter + 2 * boltHolderHeigh;
+
+    difference()
+    {
+
+        translate([0,0,0])
+        {
+            translate([-gimpalShaftWidth / 2,0,0])
+                linear_extrude(height = clampHalfWidth)
+                    square([gimpalShaftWidth , clampHeight]);
+
+            cylinder(r = connectorDiameter / 2 + boltHolderHeigh, h = boltHolderHeigh);
+        }
+
+        translate([-gimpalShaftWidth / 2, 0,  clampHalfWidth])
+        rotate(a = 90, v = [0,1,0])
+        hull()
+        {
+            for(y = [0:1])
+            translate([0, y * (squareLength * 12 / 100),0])
+            {
+                linear_extrude(height = gimpalShaftWidth)
+                    circle(r = innerCurveRadius, center = true);
+            }
+        }
+
+        cylinder(r = connectorDiameter / 2, h = gimpalShaftWidth);
+    }
+}
 
 // TODO: Increase height to 11.?
 module DrawRoundedStandoff(height = 7.2, standoffInnerRadius =  1.52)
