@@ -96,43 +96,48 @@ hingeThickness = slabThickness;
 //DrawRoundedStandoff(height = 11);
 
 //DrawShaftConnector();
-connectorDiameter = 3.2; // 3mm screw should fit around it
-connectorDiameterOuterDelta = 3;
-connectorHingeThickness = 2.2;
 
-connectorDiameterOuter = connectorDiameter + connectorDiameterOuterDelta;
-clampHalfWidth = (connectorDiameter + connectorDiameterOuterDelta + connectorHingeThickness) / 2;
+connectorRadiusInner = 1.65; // 3mm screw should fit around it
+connectorRadiusOuterDelta = 1.5; // The thickness around the inner radius
+connectorHingeSpace = .45; // Space between the connector and hinge - must allow free movement
+connectorHingeThickness = 1.3; // Must be stron enough to hold the connector
+gimpalShaftWidth = 5; //  
+clampHeight = 8;
 
-module DrawShaftConnector(squareLength = 6.2, connectorDiameter = connectorDiameter)
+clampHalfWidth = (connectorRadiusInner + connectorRadiusOuterDelta + connectorHingeSpace + connectorHingeThickness);
+connectorOuterDiameter = connectorRadiusInner + connectorRadiusOuterDelta;
+
+module DrawShaftConnector(connectorOuterDiameter = connectorOuterDiameter, 
+                            connectorDiameter = connectorRadiusInner * 2, 
+                            clampHalfWidth = clampHalfWidth,
+                            shaftConnectorHeight = gimpalShaftWidth
+)
 {
+    squareSide = connectorDiameter * cos(45);
+
     difference()
     {
         translate([0,0,0])
         {
-            linear_extrude(height = connectorDiameter)
-                circle(r = squareLength / 2, center = true);
-
-            squareSide = connectorDiameter * cos(45);
             linear_extrude(height = squareSide)
-                square([squareLength + 2 * squareSide, squareSide], center = true);
+                circle(r = connectorOuterDiameter, center = true);
+
+            linear_extrude(height = squareSide)
+                square([ clampHalfWidth * 2, squareSide], center = true);
         }
-        cylinder(r = connectorDiameter / 2, h = connectorDiameter);
+        cylinder(r = connectorDiameter / 2, h = squareSide);
     }
 }
 
-clampHeight = 16;
-module DrawShaftClamps(squareLength = 6.2, connectorDiameter = connectorDiameter)
+module DrawShaftClamp(connectorDiameter = connectorRadiusInner * 2, 
+                            clampHeight = clampHeight,
+                            gimpalShaftWidth = gimpalShaftWidth,
+                            clampHalfWidth = clampHalfWidth,
+                            connectorHingeThickness = connectorHingeThickness)
 {
-    // from the outer radius of the connectorDiameter (squareLength / 2 + )
+    // from the outer radius of the connectorDiameter (connectorOuteDiameter / 2 + )
     // add a small factor to get the total free rolling radius (default = .3 + .3)
     // add the factor for the hinge (2.2)
-
-    innerCurveRadius = squareLength / 2 * 105 / 100;
-    squareSide = connectorDiameter * cos(45);
-    // clampHalfWidth = (squareLength + squareSide) / 2;
-    // clampHalfWidth = connectorDiameter +    
-    boltHolderHeigh = clampHalfWidth - innerCurveRadius;
-    gimpalShaftWidth = connectorDiameter + 2 * boltHolderHeigh;
 
     difference()
     {
@@ -143,15 +148,17 @@ module DrawShaftClamps(squareLength = 6.2, connectorDiameter = connectorDiameter
                 linear_extrude(height = clampHalfWidth)
                     square([gimpalShaftWidth , clampHeight]);
 
-            cylinder(r = connectorDiameter / 2 + boltHolderHeigh, h = boltHolderHeigh);
+            cylinder(r = gimpalShaftWidth / 2, h = clampHalfWidth);
         }
+
+        innerCurveRadius = clampHalfWidth - connectorHingeThickness;
 
         translate([-gimpalShaftWidth / 2, 0,  clampHalfWidth])
         rotate(a = 90, v = [0,1,0])
         hull()
         {
             for(y = [0:1])
-            translate([0, y * (squareLength * 12 / 100),0])
+            translate([0, -y * gimpalShaftWidth / 2,0])
             {
                 linear_extrude(height = gimpalShaftWidth)
                     circle(r = innerCurveRadius, center = true);
@@ -160,6 +167,16 @@ module DrawShaftClamps(squareLength = 6.2, connectorDiameter = connectorDiameter
 
         cylinder(r = connectorDiameter / 2, h = gimpalShaftWidth);
     }
+}
+
+module DrawShaftClamps()
+{
+    mirror([0, 1, 0])
+    translate([0, -clampHeight, 0])
+        DrawShaftClamp();
+
+    translate([0, -clampHeight, 0])
+        DrawShaftClamp();
 }
 
 // TODO: Increase height to 11.?
