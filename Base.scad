@@ -99,13 +99,79 @@ hingeThickness = slabThickness;
 
 connectorRadiusInner = 1.65; // 3mm screw should fit around it
 connectorRadiusOuterDelta = 1.5; // The thickness around the inner radius
-connectorHingeSpace = .45; // Space between the connector and hinge - must allow free movement
+connectorHingeSpace = .5; // Space between the connector and hinge - must allow free movement
 connectorHingeThickness = 1.3; // Must be stron enough to hold the connector
 gimpalShaftWidth = 5; //  
 clampHeight = 8;
 
 clampHalfWidth = (connectorRadiusInner + connectorRadiusOuterDelta + connectorHingeSpace + connectorHingeThickness);
 connectorOuterDiameter = connectorRadiusInner + connectorRadiusOuterDelta;
+
+
+mountingPlateRadiusTop = 4;
+mountingPlateRadiusBottom = 1;
+mountingPlateWidth = 30; // 17;
+mountingPlateLength = 24;
+mountingPlateHeight = clampHalfWidth * 2;
+mountingPlateScrewHeadHeight = 3.5;
+mountingPlateScrewXOffset = 10;
+mountingPlateScrewYOffset = 15;
+gimpalFreeMoveSpaceX = gimpalShaftWidth + 0.3;
+gimpalFreeMoveSpaceY = 18;
+
+module DrawMountingPlate(mountingPlateRadiusTop = mountingPlateRadiusTop, mountingPlateWidth = mountingPlateWidth)
+{
+
+    difference()
+    {
+        hull()
+        {
+            for(y = [0: 1])
+            translate([0, mountingPlateRadiusTop + y * (mountingPlateLength - 2 * mountingPlateRadiusTop), mountingPlateHeight - mountingPlateRadiusTop])
+            rotate(a = 90, v = [0, 1, 0])
+                cylinder(r = mountingPlateRadiusTop, h = mountingPlateWidth);
+
+            for(y = [0: 1])
+            translate([0, mountingPlateRadiusBottom + y * (mountingPlateLength - 2 * mountingPlateRadiusBottom), mountingPlateRadiusBottom])
+            rotate(a = 90, v = [0, 1, 0])
+                cylinder(r = mountingPlateRadiusBottom, h = mountingPlateWidth);
+        }
+
+        // draw the munting gimpal screw
+        translate([0, mountingPlateLength / 2, screwRadius + clampHalfWidth])
+        {
+                rotate(a = 90, v = [0, 1, 0])
+                    cylinder(r = screwRadius, h = mountingPlateWidth);
+
+            rotate(a = 90, v = [0, 1, 0])
+                cylinder(r = bodyMountScrewHeadDiameter / 2, h = mountingPlateScrewHeadHeight);
+
+        translate([mountingPlateWidth - mountingPlateScrewHeadHeight, 0, 0])
+            rotate(a = 90, v = [0, 1, 0])
+                cylinder(r = bodyMountScrewHeadDiameter / 2, h = mountingPlateScrewHeadHeight);
+
+        }
+
+        // draw the gimpal hole
+        translate([(mountingPlateWidth - gimpalFreeMoveSpaceX) / 2, (mountingPlateLength - gimpalFreeMoveSpaceY) / 2, 0])
+            cube([gimpalFreeMoveSpaceX, gimpalFreeMoveSpaceY, mountingPlateWidth]);
+
+        // Draw mounting screw
+        centerX = (mountingPlateWidth - mountingPlateScrewXOffset) / 2;
+        centerY = (mountingPlateLength - mountingPlateScrewYOffset) / 2;
+        for(y = [0: 1])
+        for(x = [0: 1])
+        {
+            translate([x * mountingPlateScrewXOffset + centerX, y * mountingPlateScrewYOffset + centerY,0])
+                cylinder(r = screwRadius, h = mountingPlateHeight);
+            translate([x * mountingPlateScrewXOffset + centerX, y * mountingPlateScrewYOffset + centerY, mountingPlateHeight - mountingPlateScrewHeadHeight])
+                cylinder(r = bodyMountScrewHeadDiameter / 2, h = mountingPlateScrewHeadHeight);
+        }
+
+
+    }
+}
+
 
 module DrawShaftConnector(connectorOuterDiameter = connectorOuterDiameter, 
                             connectorDiameter = connectorRadiusInner * 2, 
