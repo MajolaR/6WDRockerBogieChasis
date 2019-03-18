@@ -3,4 +3,3 @@ translate([0, 20, 0])
     DrawShaftConnector();
 
 DrawShaftClamps();
-//DrawShaftClamp();
