@@ -131,25 +131,34 @@ bearingFrictionHeight = 1;
 module DrawMountingRod(MountingRodWidth = MountingRodWidth, MountingRodHeight = MountingRodHeight, MountingRodLength = MountingRodLength,
         bearingFrictionHeight = bearingFrictionHeight)
 {
+    titTotalLength = MountingRodLength + 2 * MountingRodTitLength;
     difference()
     {
         union()
         {
             linear_extrude(height = MountingRodHeight)
                 square([MountingRodWidth, MountingRodLength], center = true);
-            linear_extrude(height = MountingRodTitSide)
-                square([MountingRodTitSide, MountingRodLength + 2 * MountingRodTitLength], center = true);
+
+            titRadius = sqrt(2 * pow (MountingRodTitSide, 2)) / 2;
+            // titTotalLength = MountingRodLength + 2 * MountingRodTitLength;
+            translate([0, titTotalLength / 2, MountingRodTitSide / 2])
+                rotate(a = 90, v = [1, 0, 0])
+                    cylinder(r = titRadius, h = titTotalLength);
+
+            // linear_extrude(height = MountingRodTitSide)
+                // square([MountingRodTitSide, MountingRodLength + 2 * MountingRodTitLength], center = true);
 
             // Draw an inner rod to reduce bearing friction
             radToSquareOffset = 0.25; // radius to square offset
 
             // calculate the cylindr radius using pythagoras
-            radii = sqrt(2 * pow (MountingRodTitSide, 2)) / 2 + radToSquareOffset;
-            totalRodLength = MountingRodLength + 2 * bearingFrictionHeight;
+            //radii = titRadius + radToSquareOffset;
+            
+            rodRadius = MountingRodWidth / 2;
+            totalRodLength = MountingRodLength + 2 * bearingFrictionHeight;            
             translate([0, totalRodLength / 2, MountingRodTitSide / 2])
                 rotate(a = 90, v = [1, 0, 0])
-                    cylinder(r = radii, h = totalRodLength);
-
+                    cylinder(r = rodRadius, h = totalRodLength);
         }
 
         // Cut the screw hole
@@ -159,9 +168,10 @@ module DrawMountingRod(MountingRodWidth = MountingRodWidth, MountingRodHeight = 
                 cylinder(r = 1.5, h = screwHoleHeight);
         
         // Clean out the cylinder on teh underside
+        echo("titTotalLength: ", titTotalLength); 
         translate([0,0,-MountingRodWidth])
             linear_extrude(height = MountingRodHeight)
-                square([MountingRodWidth, MountingRodLength + 2 * bearingFrictionHeight], center = true);
+                square([MountingRodWidth, titTotalLength], center = true);
 
         // Draw hole to hold the ...
         halfDistance = (MountingRodLength + 2 * MountingRodTitLength) / 2;
