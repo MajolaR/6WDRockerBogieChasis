@@ -125,9 +125,11 @@ MountingRodWidth = 6.2;
 MountingRodHeight = 6.2;
 MountingRodLength = 68;
 MountingRodTitLength = 5;
-MountingRodTitSide = 3; // Change to square within a 3mm diameter cylinder
+MountingRodTitSide = 3.5; // Change to square within a 3mm diameter cylinder
+bearingFrictionHeight = 1;
 
-module DrawMountingRod(MountingRodWidth = MountingRodWidth, MountingRodHeight = MountingRodHeight, MountingRodLength = MountingRodLength)
+module DrawMountingRod(MountingRodWidth = MountingRodWidth, MountingRodHeight = MountingRodHeight, MountingRodLength = MountingRodLength,
+        bearingFrictionHeight = bearingFrictionHeight)
 {
     difference()
     {
@@ -137,14 +139,49 @@ module DrawMountingRod(MountingRodWidth = MountingRodWidth, MountingRodHeight = 
                 square([MountingRodWidth, MountingRodLength], center = true);
             linear_extrude(height = MountingRodTitSide)
                 square([MountingRodTitSide, MountingRodLength + 2 * MountingRodTitLength], center = true);
+
+            // Draw an inner rod to reduce bearing friction
+            radToSquareOffset = 0.25; // radius to square offset
+
+            // calculate the cylindr radius using pythagoras
+            radii = sqrt(2 * pow (MountingRodTitSide, 2)) / 2 + radToSquareOffset;
+            totalRodLength = MountingRodLength + 2 * bearingFrictionHeight;
+            translate([0, totalRodLength / 2, MountingRodTitSide / 2])
+                rotate(a = 90, v = [1, 0, 0])
+                    cylinder(r = radii, h = totalRodLength);
+
         }
 
+        // Cut the screw hole
         screwHoleHeight = MountingRodWidth;
         translate([-screwHoleHeight/2, 0, MountingRodHeight/2])
             rotate(a = 90, v = [0, 1, 0])
                 cylinder(r = 1.5, h = screwHoleHeight);
+        
+        // Clean out the cylinder on teh underside
+        translate([0,0,-MountingRodWidth])
+            linear_extrude(height = MountingRodHeight)
+                square([MountingRodWidth, MountingRodLength + 2 * bearingFrictionHeight], center = true);
+
+        // Draw hole to hold the ...
+        halfDistance = (MountingRodLength + 2 * MountingRodTitLength) / 2;
+
+        screwDepth = 15;
+        screwSelfTapperRadius = 1.1;
+
+            translate([0, halfDistance, MountingRodTitSide / 2])
+                rotate(a = 90, v = [1, 0, 0])
+                    cylinder(r = screwSelfTapperRadius, h = screwDepth);
+
+            translate([0, screwDepth - halfDistance, MountingRodTitSide / 2])
+                rotate(a = 90, v = [1, 0, 0])
+                    cylinder(r = screwSelfTapperRadius, h = screwDepth);
+
     }
 }
+
+
+//module ()
 
 module DrawMountingPlate(mountingPlateRadiusTop = mountingPlateRadiusTop, mountingPlateWidth = mountingPlateWidth)
 {
